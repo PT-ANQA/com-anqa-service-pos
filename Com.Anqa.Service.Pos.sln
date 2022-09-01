@@ -13,11 +13,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Setup", "Setup", "{379C64CD
 		Dockerfile.test.build.sh = Dockerfile.test.build.sh
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com.BatikSolo.Service.Pos.WebApi", "Com.BatikSolo.Service.Pos.WebApi\Com.BatikSolo.Service.Pos.WebApi.csproj", "{445CEF47-BDD6-4D64-A4C0-5887E470FA2E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com.Anqa.Service.Pos.WebApi", "Com.Anqa.Service.Pos.WebApi\Com.Anqa.Service.Pos.WebApi.csproj", "{74C02736-F8E4-437D-9A1E-6A593AEB08D5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com.BatikSolo.Service.Pos.Lib", "Com.BatikSolo.Service.Pos.Lib\Com.BatikSolo.Service.Pos.Lib.csproj", "{59535BF7-28DD-40F8-9203-DFFB8EA68377}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com.BatikSolo.Service.Pos.Test", "Com.Anqa.Service.Pos.Test\Com.BatikSolo.Service.Pos.Test.csproj", "{C18E8478-0D46-4D04-B3EB-A2378D1AFFF3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com.BatikSolo.Service.Pos.Test", "Com.BatikSolo.Service.Pos.Test\Com.BatikSolo.Service.Pos.Test.csproj", "{01B5097D-98EA-4081-B631-D0898B888B5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Com.BatikSolo.Service.Pos.Lib", "Com.Anqa.Service.Pos.Lib\Com.BatikSolo.Service.Pos.Lib.csproj", "{161F92A3-E0F6-4A1F-B931-805BC438EBE4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,18 +25,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{445CEF47-BDD6-4D64-A4C0-5887E470FA2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{445CEF47-BDD6-4D64-A4C0-5887E470FA2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{445CEF47-BDD6-4D64-A4C0-5887E470FA2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{445CEF47-BDD6-4D64-A4C0-5887E470FA2E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59535BF7-28DD-40F8-9203-DFFB8EA68377}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59535BF7-28DD-40F8-9203-DFFB8EA68377}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59535BF7-28DD-40F8-9203-DFFB8EA68377}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59535BF7-28DD-40F8-9203-DFFB8EA68377}.Release|Any CPU.Build.0 = Release|Any CPU
-		{01B5097D-98EA-4081-B631-D0898B888B5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{01B5097D-98EA-4081-B631-D0898B888B5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{01B5097D-98EA-4081-B631-D0898B888B5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{01B5097D-98EA-4081-B631-D0898B888B5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74C02736-F8E4-437D-9A1E-6A593AEB08D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74C02736-F8E4-437D-9A1E-6A593AEB08D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74C02736-F8E4-437D-9A1E-6A593AEB08D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74C02736-F8E4-437D-9A1E-6A593AEB08D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C18E8478-0D46-4D04-B3EB-A2378D1AFFF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C18E8478-0D46-4D04-B3EB-A2378D1AFFF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C18E8478-0D46-4D04-B3EB-A2378D1AFFF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C18E8478-0D46-4D04-B3EB-A2378D1AFFF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{161F92A3-E0F6-4A1F-B931-805BC438EBE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{161F92A3-E0F6-4A1F-B931-805BC438EBE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{161F92A3-E0F6-4A1F-B931-805BC438EBE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{161F92A3-E0F6-4A1F-B931-805BC438EBE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
