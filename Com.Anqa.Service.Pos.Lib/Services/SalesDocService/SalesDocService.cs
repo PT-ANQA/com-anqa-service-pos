@@ -42,7 +42,8 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
         }
         public Tuple<List<SalesDoc>, int, Dictionary<string, string>, List<string>> ReadModel(string storecode,int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}", string Username = "")
         {
-            IQueryable<SalesDoc> Query = this.DbContext.SalesDocs.Where(x => x._CreatedBy == Username && x.StoreCode == storecode);
+            //IQueryable<SalesDoc> Query = this.DbContext.SalesDocs.Where(x => x._CreatedBy == Username && x.StoreCode == storecode);
+            IQueryable<SalesDoc> Query = this.DbContext.SalesDocs.Where(x => x.StoreCode == storecode);
 
             List<string> SearchAttributes = new List<string>()
             {
@@ -55,8 +56,6 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
             {
                 "Id", "Date", "Code", "StoreName"
             };
-
-           
 
             Dictionary<string, object> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(Filter);
             Query = QueryHelper<SalesDoc>.Filter(Query, FilterDictionary);
