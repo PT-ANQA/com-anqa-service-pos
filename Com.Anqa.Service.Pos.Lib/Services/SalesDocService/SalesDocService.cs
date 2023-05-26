@@ -517,9 +517,11 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
                         oldM.FlagForUpdate(IdentityService.Username, UserAgent);
 
                         TransferInDocViewModel transferInDocView = new TransferInDocViewModel();
+                        TransferOutDocViewModel transferOutDocView = new TransferOutDocViewModel();
                         List<TransferInDocItemViewModel> transferInDocItems = new List<TransferInDocItemViewModel>();
+                        List<TransferOutDocItemViewModel> transferOutDocItems = new List<TransferOutDocItemViewModel>();
 
-                        foreach(var i in oldM.Details)
+                        foreach (var i in oldM.Details)
                         {
                             if (!i.isReturn)
                             {
@@ -540,6 +542,27 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
                                     },
                                     remark = oldM.Remark,
                                     sendquantity = i.Quantity
+                                });
+                            }
+                            else
+                            {
+                                transferOutDocItems.Add(new TransferOutDocItemViewModel
+                                {
+                                    item = new ItemViewModels
+                                    {
+                                        articleRealizationOrder = i.ItemArticleRealizationOrder,
+                                        code = i.ItemCode,
+                                        domesticCOGS = i.ItemDomesticCOGS,
+                                        domesticRetail = i.ItemDomesticRetail,
+                                        domesticSale = i.ItemDomesticSale,
+                                        domesticWholesale = i.ItemDomesticWholeSale,
+                                        name = i.ItemName,
+                                        size = i.ItemSize,
+                                        uom = i.ItemUom,
+                                        _id = i.ItemId
+                                    },
+                                    remark = oldM.Remark,
+                                    quantity = i.Quantity
                                 });
                             }
                         }
@@ -569,6 +592,29 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
                         //{
 
                         //}
+
+                        if (transferOutDocItems.Count > 0)
+                        {
+                            transferOutDocView.code=transferInDocView.code;
+                            transferOutDocView.destination = new DestinationViewModel
+                            {
+                                code = oldM.StoreStorageCode,
+                                name = oldM.StoreStorageName,
+                                _id = oldM.StoreStorageId
+                            };
+                            transferOutDocView.reference = oldM.Code;
+                            transferOutDocView.source = new SourceViewModel
+                            {
+                                code = oldM.StoreStorageCode,
+                                name = oldM.StoreStorageName,
+                                _id = oldM.StoreStorageId
+                            };
+                            transferOutDocView.items = transferOutDocItems;
+                            string warehouseOutUri = "transfer-out/for-pos";
+                            var response1 = await httpClient.PostAsync($"{APIEndpoint.Warehouse}{warehouseOutUri}", new StringContent(JsonConvert.SerializeObject(transferOutDocView).ToString(), Encoding.UTF8, General.JsonMediaType));
+
+                            response1.EnsureSuccessStatusCode();
+                        }
                     }
 
                     Updated = await DbContext.SaveChangesAsync();
