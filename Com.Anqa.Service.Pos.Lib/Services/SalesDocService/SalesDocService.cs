@@ -23,6 +23,8 @@ using System.Data;
 using System.IO;
 using System.Globalization;
 using Com.Anqa.Service.Pos.Lib.ViewModels;
+using OfficeOpenXml;
+using System.Data.SqlClient;
 
 namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
 {
@@ -1185,6 +1187,199 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
 
             return Query.ToList();
 
+        }
+
+        public Tuple<List<SalesReportViewModel>, int> GetSalesAll(string storageId, DateTime dateFrom, DateTime dateTo, int page = 1, int size = 25)
+        {
+
+
+            var Query = GetSalesAllQuery(storageId, dateFrom, dateTo);
+
+            Pageable<SalesReportViewModel> pageable = new Pageable<SalesReportViewModel>(Query, page - 1, size);
+            List<SalesReportViewModel> Data = pageable.Data.ToList<SalesReportViewModel>();
+            int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Data, TotalData);
+        }
+        public IQueryable<SalesReportViewModel> GetSalesAllQuery(string storageId, DateTime dateFrom, DateTime dateTo)
+        {
+            DateTime _dateTo = dateTo == new DateTime(0001, 1, 1) ? DateTime.Now : dateTo;
+            //DateTime _dateFrom = dateFrom == new DateTime(0001, 1, 1) ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1) : dateFrom;
+            //var builder = new ConfigurationBuilder()
+            //              .SetBasePath(Directory.GetCurrentDirectory())
+            //              .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true);
+            //IConfiguration _configuration = builder.Build();
+            //var myConnectionString1 = _configuration.GetConnectionString("DefaultConnection");
+            //SqlConnection conn = new SqlConnection(myConnectionString1);
+            SqlConnection conn = new SqlConnection("Server=anqa-db-server.database.windows.net,1433;Database=anqa-db-pos;User=anqaprd;password=anqa123.;Trusted_Connection=False;Encrypt=True;MultipleActiveResultSets=true");
+
+            conn.Open();
+            if (storageId != "0")
+            {
+                SqlCommand command = new SqlCommand(
+               "select s._CreatedUtc,Code,Date,SubTotal,Discount,GrandTotal,StoreCode,StoreName,ItemCode,ItemName,ItemArticleRealizationOrder,Quantity,Price,Discount1,Discount2,DiscountNominal,Margin,SpesialDiscount as sp,Total,s.isReturn,Remark,PaymentType,	BankName,Card " +
+               "from SalesDocs s join SalesDocDetails d on s.Id= d.SalesDocId where   s._IsDeleted=0 and d._IsDeleted=0 and (CONVERT(Date, [Date]) between '" + dateFrom.Date + "' and '" + _dateTo.Date + "'  ) and StoreId= " + storageId, conn);
+                List<SalesReportViewModel> dataList = new List<SalesReportViewModel>();
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        // var date = Convert.ToDateTime(reader["Date"].ToString());
+                        SalesReportViewModel data = new SalesReportViewModel
+                        {
+                            Date = reader["Date"].ToString(),
+                            ItemCode = reader["ItemCode"].ToString(),
+                            ItemName = reader["ItemName"].ToString(),
+                            ItemArticleRealizationOrder = reader["ItemArticleRealizationOrder"].ToString(),
+                            Price = Convert.ToDouble(reader["Price"]),
+                            Quantity = Convert.ToDouble(reader["Quantity"]),
+                            Total = Convert.ToDouble(reader["Total"]),
+                            GrandTotal = Convert.ToDouble(reader["GrandTotal"]),
+                            StoreCode = reader["StoreCode"].ToString(),
+                            StoreName = reader["StoreName"].ToString(),
+                            Code = reader["Code"].ToString(),
+                            Card = reader["Card"].ToString(),
+                            SubTotal = Convert.ToDouble(reader["SubTotal"]),
+                            Discount1 = Convert.ToDouble(reader["Discount1"]),
+                            Discount2 = Convert.ToDouble(reader["Discount2"]),
+                            DiscountNominal = Convert.ToDouble(reader["DiscountNominal"]),
+                            BankName = reader["BankName"].ToString(),
+                            Discount = Convert.ToDouble(reader["Discount"]),
+                            Margin = Convert.ToDouble(reader["Margin"]),
+                            PaymentType = reader["PaymentType"].ToString(),
+                            Remark = reader["Remark"].ToString(),
+                            SpecialDiscount = Convert.ToInt32(reader["sp"].ToString()),
+                            _CreatedUtc = reader["_CreatedUtc"].ToString(),
+                            IsReturn = Convert.ToBoolean(reader["isReturn"]) == true ? "Diretur" : "Tidak"
+
+                        };
+                        dataList.Add(data);
+                    }
+                }
+                return dataList.AsQueryable().OrderBy(a => a.Date).ThenBy(a => a.ItemCode);
+
+            }
+            else
+            {
+                SqlCommand command = new SqlCommand(
+             "select s._CreatedUtc,Code,Date,SubTotal,Discount,GrandTotal,StoreCode,StoreName,ItemCode,ItemName,ItemArticleRealizationOrder,Quantity,Price,Discount1,Discount2,DiscountNominal,Margin,SpesialDiscount as sp,Total,s.isReturn,Remark,PaymentType,	BankName,Card " +
+               "from SalesDocs s join SalesDocDetails d on s.Id= d.SalesDocId where   s._IsDeleted=0 and d._IsDeleted=0  and (CONVERT(Date, [Date]) between '" + dateFrom.Date + "' and '" + _dateTo.Date + "'  )", conn);
+                List<SalesReportViewModel> dataList = new List<SalesReportViewModel>();
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        // var date = Convert.ToDateTime(reader["Date"].ToString());
+                        SalesReportViewModel data = new SalesReportViewModel
+                        {
+                            Date = reader["Date"].ToString(),
+                            ItemCode = reader["ItemCode"].ToString(),
+                            ItemName = reader["ItemName"].ToString(),
+                            ItemArticleRealizationOrder = reader["ItemArticleRealizationOrder"].ToString(),
+                            Price = Convert.ToDouble(reader["Price"]),
+                            Quantity = Convert.ToDouble(reader["Quantity"]),
+                            Total = Convert.ToDouble(reader["Total"]),
+                            GrandTotal = Convert.ToDouble(reader["GrandTotal"]),
+                            StoreCode = reader["StoreCode"].ToString(),
+                            StoreName = reader["StoreName"].ToString(),
+                            Code = reader["Code"].ToString(),
+                            Card = reader["Card"].ToString(),
+                            SubTotal = Convert.ToDouble(reader["SubTotal"]),
+                            Discount1 = Convert.ToDouble(reader["Discount1"]),
+                            Discount2 = Convert.ToDouble(reader["Discount2"]),
+                            DiscountNominal = Convert.ToDouble(reader["DiscountNominal"]),
+                            BankName = reader["BankName"].ToString(),
+                            Discount = Convert.ToDouble(reader["Discount"]),
+                            Margin = Convert.ToDouble(reader["Margin"]),
+                            PaymentType = reader["PaymentType"].ToString(),
+                            Remark = reader["Remark"].ToString(),
+                            SpecialDiscount = Convert.ToInt32(reader["sp"].ToString()),
+                            _CreatedUtc = reader["_CreatedUtc"].ToString(),
+                            IsReturn = Convert.ToBoolean(reader["isReturn"]) == true ? "Diretur" : ""
+                        };
+                        dataList.Add(data);
+                    }
+                }
+                return dataList.AsQueryable();
+
+            }
+
+        }
+        public MemoryStream GenerateExcelReportSalesAll(string storageId, DateTime dateFrom, DateTime dateTo)
+        {
+            var Query = GetSalesAllQuery(storageId, dateFrom, dateTo);
+
+            DataTable result = new DataTable();
+            result.Columns.Add(new DataColumn() { ColumnName = "Code", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Date", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Sub Total", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Discount", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Grand Total", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Store Code", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Store Name", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Item Code", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Item Name", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "RO", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Quantity", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Price", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Discount1", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Discount2", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Discount Nominal", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Margin", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Spesial Discount", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "IsReturn", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Remark", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Payment Type", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Bank Name", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Card", DataType = typeof(String) });
+
+
+            if (Query.ToArray().Count() == 0)
+                result.Rows.Add("", "", 0, 0, 0, "", "", "", "", "", 0, 0, 0, 0, 0, 0, 0, 0, "", "", "", "", "");
+
+            // to allow column name to be generated properly for empty data as template
+            else
+            {
+                foreach (var item in Query)
+                {
+                    result.Rows.Add(item.Code, item.Date, item.SubTotal,
+                          item.Discount, item.GrandTotal, item.StoreCode, item.StoreName, item.ItemCode, item.ItemName, item.ItemArticleRealizationOrder, item.Quantity, item.Price,
+                          item.Discount1, item.Discount2, item.DiscountNominal, item.Margin, item.SpecialDiscount, item.Total, item.IsReturn, item.Remark, item.PaymentType, item.BankName, item.Card);
+                }
+
+            }
+            bool styling = true;
+            using (var package = new ExcelPackage())
+            {
+                var sheet = package.Workbook.Worksheets.Add("Sheet 1");
+
+
+                var col = (char)('A' + (result.Columns.Count - 1));
+                string tglawal = dateFrom.ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+                string tglakhir = dateTo.ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+
+                sheet.Cells[$"A1:{col}1"].Value = string.Format("LAPORAN PENJUALAN BARANG");
+                sheet.Cells[$"A1:{col}1"].Merge = true;
+                sheet.Cells[$"A1:{col}1"].Style.Font.Size = 15;
+                sheet.Cells[$"A1:{col}1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                sheet.Cells[$"A1:{col}1"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                sheet.Cells[$"A1:{col}1"].Style.Font.Bold = true;
+
+                sheet.Cells[$"A2:{col}2"].Value = string.Format("Periode {0} - {1}", tglawal, tglakhir);
+                sheet.Cells[$"A2:{col}2"].Merge = true;
+                sheet.Cells[$"A2:{col}2"].Style.Font.Size = 15;
+                sheet.Cells[$"A2:{col}2"].Style.Font.Bold = true;
+                sheet.Cells[$"A2:{col}2"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                sheet.Cells[$"A2:{col}2"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+
+                sheet.Cells["A5"].LoadFromDataTable(result, true, (styling == true) ? OfficeOpenXml.Table.TableStyles.Light16 : OfficeOpenXml.Table.TableStyles.None);
+                sheet.Cells["A5"].Style.Font.Bold = true;
+                sheet.Cells[$"A6:{col}6"].AutoFitColumns();
+                MemoryStream stream = new MemoryStream();
+                package.SaveAs(stream);
+                return stream;
+            }
         }
     }
 }

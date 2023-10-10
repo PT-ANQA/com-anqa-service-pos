@@ -313,5 +313,57 @@ namespace Com.Anqa.Service.Pos.WebApi.Controllers.v1.SalesDocControllers
             
         }
 
+        [HttpGet("monitoring/get-sales-all")]
+        public IActionResult GetSalesAll(string storage, DateTime dateFrom, DateTime dateTo, string info, int page = 1, int size = 25, string Order = "{}")
+        {
+
+            if (storage == null) { storage = "0"; }
+            try
+            {
+                var data = Service.GetSalesAll(storage, dateFrom, dateTo, page, size);
+
+                return Ok(new
+                {
+                    apiVersion = ApiVersion,
+                    data = data.Item1,
+                    info = new { total = data.Item2 },
+                    message = General.OK_MESSAGE,
+                    statusCode = General.OK_STATUS_CODE
+                });
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+        [HttpGet("monitoring/get-sales-all/download")]
+        public IActionResult GetSaleslXls(string storage, DateTime dateFrom, DateTime dateTo)
+        {
+            try
+            {
+                byte[] xlsInBytes;
+                string filename;
+                if (storage == null) { storage = "0"; }
+
+                var xls = Service.GenerateExcelReportSalesAll(storage, dateFrom, dateTo);
+                filename = String.Format("Report Sales - {0}.xlsx", dateFrom.ToString("MM-yyyy") + "-" + dateTo.ToString("MM-yyyy"));
+
+                xlsInBytes = xls.ToArray();
+                var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+
+                return file;
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
     }
 }
