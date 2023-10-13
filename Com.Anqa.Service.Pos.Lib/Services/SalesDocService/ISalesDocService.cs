@@ -1,7 +1,6 @@
 ﻿using Com.Anqa.Service.Pos.Lib.Models.SalesDoc;
 using Com.Anqa.Service.Pos.Lib.ViewModels;
 using Com.Anqa.Service.Pos.Lib.ViewModels.SalesDoc;
-using Com.Bateeq.Service.Pos.Lib.ViewModels.SalesDoc;
 using System;
 using System.Collections.Generic;
 using System.IO;
