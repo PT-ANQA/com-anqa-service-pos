@@ -1204,14 +1204,8 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
         public IQueryable<SalesReportViewModel> GetSalesAllQuery(string storageId, DateTime dateFrom, DateTime dateTo)
         {
             DateTime _dateTo = dateTo == new DateTime(0001, 1, 1) ? DateTime.Now : dateTo;
-            //DateTime _dateFrom = dateFrom == new DateTime(0001, 1, 1) ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1) : dateFrom;
-            //var builder = new ConfigurationBuilder()
-            //              .SetBasePath(Directory.GetCurrentDirectory())
-            //              .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true);
-            //IConfiguration _configuration = builder.Build();
-            //var myConnectionString1 = _configuration.GetConnectionString("DefaultConnection");
-            //SqlConnection conn = new SqlConnection(myConnectionString1);
-            SqlConnection conn = new SqlConnection("Server=anqa-db-server.database.windows.net,1433;Database=anqa-db-pos;User=anqaprd;password=anqa123.;Trusted_Connection=False;Encrypt=True;MultipleActiveResultSets=true");
+
+            SqlConnection conn = new SqlConnection("Server=anqa-db-server.database.windows.net,1433;Database=anqa-db-pos;User=anqaprd;password=Anqa321.;Trusted_Connection=False;Encrypt=True;MultipleActiveResultSets=true");
 
             conn.Open();
             if (storageId != "0")
@@ -1259,7 +1253,19 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
                 return dataList.AsQueryable().OrderBy(a => a.Date).ThenBy(a => a.ItemCode);
 
             }
-            else
+
+            conn.Close();
+            var itemcode = "(" + string.Join(",", itemcodes) + ")";
+            SqlConnection connCore = new SqlConnection("Server=anqa-db-server.database.windows.net,1433;Database=anqa-db-core;User=anqaprd;password=Anqa321.;Trusted_Connection=False;Encrypt=True;MultipleActiveResultSets=true");
+
+            string itemQuery = "SELECT Code, ArticleRealizationOrder, CategoryDocName, CollectionDocName,  Name, ColorDocName, " +
+                "CounterDocName, DomesticSale, DomesticCOGS, DomesticRetail, SeasonDocName, Size, StyleDocName, " +
+                "MaterialDocName FROM Items WHERE _IsDeleted = 0 and Code in " + itemcode;
+
+            connCore.Open();
+            SqlCommand commandCore = new SqlCommand(itemQuery, connCore);
+            List<SalesReportViewModel> dataItem = new List<SalesReportViewModel>();
+            using (SqlDataReader reader = commandCore.ExecuteReader())
             {
                 SqlCommand command = new SqlCommand(
              "select s._CreatedUtc,Code,Date,SubTotal,Discount,GrandTotal,StoreCode,StoreName,ItemCode,ItemName,ItemArticleRealizationOrder,Quantity,Price,Discount1,Discount2,DiscountNominal,Margin,SpesialDiscount as sp,Total,s.isReturn,Remark,PaymentType,	BankName,Card " +
