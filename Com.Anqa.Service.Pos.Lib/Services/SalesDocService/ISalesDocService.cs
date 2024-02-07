@@ -28,7 +28,7 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
         List<SalesDoc> OmzetReport(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift);
         MemoryStream GenerateExcelOmzet(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift);
         List<SalesDocByRoViewModel> GetByRO(string articleRealizationOrder);
-        Tuple<List<SalesReportViewModel>, int> GetSalesAll(string storageId, DateTime dateFrom, DateTime dateTo, int page = 1, int size = 25);
-        MemoryStream GenerateExcelReportSalesAll(string storageId, DateTime dateFrom, DateTime dateTo);
+        Tuple<List<SalesReportViewModel>, int> GetSalesAll(string storageId, DateTime dateFrom, DateTime dateTo, string group, string category, string style, string collection, string season, string color, string sizes, int page = 1, int size = 25);
+        MemoryStream GenerateExcelReportSalesAll(string storageId, DateTime dateFrom, DateTime dateTo, string group, string category, string style, string collection, string season, string color, string sizes);
     }
 }
