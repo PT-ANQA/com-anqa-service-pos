@@ -314,13 +314,13 @@ namespace Com.Anqa.Service.Pos.WebApi.Controllers.v1.SalesDocControllers
         }
 
         [HttpGet("monitoring/get-sales-all")]
-        public IActionResult GetSalesAll(string storage, DateTime dateFrom, DateTime dateTo, string info, int page = 1, int size = 25, string Order = "{}")
+        public IActionResult GetSalesAll(string storage, DateTime dateFrom, DateTime dateTo, string group, string category, string style, string collection, string season, string color, string sizes, string info, int page = 1, int size = 25, string Order = "{}")
         {
 
             if (storage == null) { storage = "0"; }
             try
             {
-                var data = Service.GetSalesAll(storage, dateFrom, dateTo, page, size);
+                var data = Service.GetSalesAll(storage, dateFrom, dateTo, group, category, style, collection, season, color, sizes, page, size);
 
                 return Ok(new
                 {
@@ -340,16 +340,16 @@ namespace Com.Anqa.Service.Pos.WebApi.Controllers.v1.SalesDocControllers
             }
         }
         [HttpGet("monitoring/get-sales-all/download")]
-        public IActionResult GetSaleslXls(string storage, DateTime dateFrom, DateTime dateTo)
+        public IActionResult GetSaleslXls(string storageId, DateTime dateFrom, DateTime dateTo, string group, string category, string style, string collection, string season, string color, string sizes)
         {
             try
             {
                 byte[] xlsInBytes;
                 string filename;
-                if (storage == null) { storage = "0"; }
+                if (storageId == null) { storageId = "0"; }
 
-                var xls = Service.GenerateExcelReportSalesAll(storage, dateFrom, dateTo);
-                filename = String.Format("Report Sales - {0}.xlsx", dateFrom.ToString("MM-yyyy") + "-" + dateTo.ToString("MM-yyyy"));
+                var xls = Service.GenerateExcelReportSalesAll(storageId, dateFrom, dateTo, group, category, style, collection, season, color, sizes);
+                filename = String.Format("Report Inventori - {0}.xlsx", dateFrom.ToString("MM-yyyy") + "-" + dateTo.ToString("MM-yyyy"));
 
                 xlsInBytes = xls.ToArray();
                 var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
