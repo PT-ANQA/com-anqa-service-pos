@@ -1189,11 +1189,10 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
 
         }
 
-        public Tuple<List<SalesReportViewModel>, int> GetSalesAll(string storageId, DateTime dateFrom, DateTime dateTo, int page = 1, int size = 25)
+        #region getSalesReport
+        public Tuple<List<SalesReportViewModel>, int> GetSalesAll(string storageId, DateTime dateFrom, DateTime dateTo, string group, string category, string style, string collection, string season, string color, string sizes, int page = 1, int size = 25)
         {
-
-
-            var Query = GetSalesAllQuery(storageId, dateFrom, dateTo);
+            var Query = GetSalesAllQuery(storageId, dateFrom, dateTo, group, category, style, collection, season, color, sizes);
 
             Pageable<SalesReportViewModel> pageable = new Pageable<SalesReportViewModel>(Query, page - 1, size);
             List<SalesReportViewModel> Data = pageable.Data.ToList<SalesReportViewModel>();
@@ -1201,136 +1200,194 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
 
             return Tuple.Create(Data, TotalData);
         }
-        public IQueryable<SalesReportViewModel> GetSalesAllQuery(string storageId, DateTime dateFrom, DateTime dateTo)
+        public IQueryable<SalesReportViewModel> GetSalesAllQuery(string storageId, DateTime dateFrom, DateTime dateTo, string group, string category, string style, string collection, string season, string color, string sizes)
         {
             DateTime _dateTo = dateTo == new DateTime(0001, 1, 1) ? DateTime.Now : dateTo;
 
-            SqlConnection conn = new SqlConnection("Server=anqa-db-server.database.windows.net,1433;Database=anqa-db-pos;User=anqaprd;password=Anqa321.;Trusted_Connection=False;Encrypt=True;MultipleActiveResultSets=true");
+            List<string> itemcodes = new List<string>();
+            List<SalesReportViewModel> dataList = new List<SalesReportViewModel>();
+            List<SalesReportViewModel> reportData = new List<SalesReportViewModel>();
 
-            conn.Open();
-            if (storageId != "0")
+            string posConnString = APIEndpoint.DefaultConnectionString;
+            using (SqlConnection conn = new SqlConnection(posConnString))
             {
-                SqlCommand command = new SqlCommand(
-               "select s._CreatedUtc,Code,Date,SubTotal,Discount,GrandTotal,StoreCode,StoreName,ItemCode,ItemName,ItemArticleRealizationOrder,Quantity,Price,Discount1,Discount2,DiscountNominal,Margin,SpesialDiscount as sp,Total,s.isReturn,Remark,PaymentType,	BankName,Card " +
-               "from SalesDocs s join SalesDocDetails d on s.Id= d.SalesDocId where   s._IsDeleted=0 and d._IsDeleted=0 and (CONVERT(Date, [Date]) between '" + dateFrom.Date + "' and '" + _dateTo.Date + "'  ) and StoreId= " + storageId, conn);
-                List<SalesReportViewModel> dataList = new List<SalesReportViewModel>();
+                conn.Open();
+
+                string query = "SELECT " +
+                    "a.StoreStorageName as Location, Discount1,Discount2,DiscountNominal,SpesialDiscount,b.ItemCode Barcode, " +
+                    "b.Price Net, b.Margin, b.Total TotalNet, b.Quantity, " +
+                    "CONVERT(varchar, a._CreatedUtc, 111) TransactionDateFormatted " +
+                    "FROM SalesDocs a " +
+                    "JOIN SalesDocDetails b on a.Id = b.SalesDocId " +
+                    "WHERE isVoid = 0 AND a.isReturn = 0 AND b.isReturn = 0 " +
+                    "and (CONVERT(Date, [Date]) between '" + dateFrom.Date + "' and '" + _dateTo.Date + "'  )";
+
+                if (storageId != "0")
+                {
+                    query += " and StoreStorageId= " + storageId;
+                }
+
+                SqlCommand command = new SqlCommand(query, conn);
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        // var date = Convert.ToDateTime(reader["Date"].ToString());
                         SalesReportViewModel data = new SalesReportViewModel
                         {
-                            Date = reader["Date"].ToString(),
-                            ItemCode = reader["ItemCode"].ToString(),
-                            ItemName = reader["ItemName"].ToString(),
-                            ItemArticleRealizationOrder = reader["ItemArticleRealizationOrder"].ToString(),
-                            Price = Convert.ToDouble(reader["Price"]),
-                            Quantity = Convert.ToDouble(reader["Quantity"]),
-                            Total = Convert.ToDouble(reader["Total"]),
-                            GrandTotal = Convert.ToDouble(reader["GrandTotal"]),
-                            StoreCode = reader["StoreCode"].ToString(),
-                            StoreName = reader["StoreName"].ToString(),
-                            Code = reader["Code"].ToString(),
-                            Card = reader["Card"].ToString(),
-                            SubTotal = Convert.ToDouble(reader["SubTotal"]),
+                            Brand = "ANQA",
+                            Date = reader["TransactionDateFormatted"].ToString(),
+                            ItemCode = reader["Barcode"].ToString(),
+                            Location = reader["Location"].ToString(),
+                            SpecialDiscount = Convert.ToDouble(reader["SpesialDiscount"]),
                             Discount1 = Convert.ToDouble(reader["Discount1"]),
                             Discount2 = Convert.ToDouble(reader["Discount2"]),
                             DiscountNominal = Convert.ToDouble(reader["DiscountNominal"]),
-                            BankName = reader["BankName"].ToString(),
-                            Discount = Convert.ToDouble(reader["Discount"]),
+                            Quantity = Convert.ToDouble(reader["Quantity"]),
                             Margin = Convert.ToDouble(reader["Margin"]),
-                            PaymentType = reader["PaymentType"].ToString(),
-                            Remark = reader["Remark"].ToString(),
-                            SpecialDiscount = Convert.ToInt32(reader["sp"].ToString()),
-                            _CreatedUtc = reader["_CreatedUtc"].ToString(),
-                            IsReturn = Convert.ToBoolean(reader["isReturn"]) == true ? "Diretur" : "Tidak"
-
+                            TotalNett = Convert.ToDouble(reader["TotalNet"])
                         };
                         dataList.Add(data);
+                        itemcodes.Add(("'" + data.ItemCode + "'"));
                     }
                 }
-                return dataList.AsQueryable().OrderBy(a => a.Date).ThenBy(a => a.ItemCode);
-
+                conn.Close();
             }
 
-            conn.Close();
             var itemcode = "(" + string.Join(",", itemcodes) + ")";
-            SqlConnection connCore = new SqlConnection("Server=anqa-db-server.database.windows.net,1433;Database=anqa-db-core;User=anqaprd;password=Anqa321.;Trusted_Connection=False;Encrypt=True;MultipleActiveResultSets=true");
-
-            string itemQuery = "SELECT Code, ArticleRealizationOrder, CategoryDocName, CollectionDocName,  Name, ColorDocName, " +
-                "CounterDocName, DomesticSale, DomesticCOGS, DomesticRetail, SeasonDocName, Size, StyleDocName, " +
-                "MaterialDocName FROM Items WHERE _IsDeleted = 0 and Code in " + itemcode;
-
-            connCore.Open();
-            SqlCommand commandCore = new SqlCommand(itemQuery, connCore);
+            string coreConnString = APIEndpoint.CoreConnectionString;
             List<SalesReportViewModel> dataItem = new List<SalesReportViewModel>();
-            using (SqlDataReader reader = commandCore.ExecuteReader())
+            using (SqlConnection connCore = new SqlConnection(coreConnString))
             {
-                SqlCommand command = new SqlCommand(
-             "select s._CreatedUtc,Code,Date,SubTotal,Discount,GrandTotal,StoreCode,StoreName,ItemCode,ItemName,ItemArticleRealizationOrder,Quantity,Price,Discount1,Discount2,DiscountNominal,Margin,SpesialDiscount as sp,Total,s.isReturn,Remark,PaymentType,	BankName,Card " +
-               "from SalesDocs s join SalesDocDetails d on s.Id= d.SalesDocId where   s._IsDeleted=0 and d._IsDeleted=0  and (CONVERT(Date, [Date]) between '" + dateFrom.Date + "' and '" + _dateTo.Date + "'  )", conn);
-                List<SalesReportViewModel> dataList = new List<SalesReportViewModel>();
-                using (SqlDataReader reader = command.ExecuteReader())
+                string itemQuery = "SELECT Code, ArticleRealizationOrder, CategoryDocName, CollectionDocName,  Name, ColorDocName, " +
+                "CounterDocName, DomesticSale, DomesticCOGS, DomesticRetail, SeasonDocName, Size, StyleDocName, " +
+                "MaterialDocName FROM Items WHERE _IsDeleted = 0 ";
+                if (itemcodes.Count > 0)
+                {
+                    itemQuery += "  and Code in " + itemcode;
+                }
+                if (!string.IsNullOrEmpty(group))
+                {
+                    itemQuery += " and [ArticleCountersId]= " + group;
+                }
+                if (!string.IsNullOrEmpty(category))
+                {
+                    itemQuery += " and [ArticleCategoriesId]= " + category;
+                }
+                if (!string.IsNullOrEmpty(style))
+                {
+                    itemQuery += " and [ArticleSubCountersId]= " + style;
+                }
+                if (!string.IsNullOrEmpty(collection))
+                {
+                    itemQuery += " and [ArticleCollectionsId]= " + collection;
+                }
+                if (!string.IsNullOrEmpty(season))
+                {
+                    itemQuery += " and [ArticleSeasonsId]= " + season;
+                }
+                if (!string.IsNullOrEmpty(color))
+                {
+                    itemQuery += " and [ArticleColorsId]= " + color;
+                }
+                if (!string.IsNullOrEmpty(sizes))
+                {
+                    itemQuery += " and [Size]= '" + sizes + "'";
+                }
+                connCore.Open();
+                SqlCommand commandCore = new SqlCommand(itemQuery, connCore);
+                using (SqlDataReader reader = commandCore.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        // var date = Convert.ToDateTime(reader["Date"].ToString());
-                        SalesReportViewModel data = new SalesReportViewModel
+                        SalesReportViewModel item = new SalesReportViewModel
                         {
-                            Date = reader["Date"].ToString(),
-                            ItemCode = reader["ItemCode"].ToString(),
-                            ItemName = reader["ItemName"].ToString(),
-                            ItemArticleRealizationOrder = reader["ItemArticleRealizationOrder"].ToString(),
-                            Price = Convert.ToDouble(reader["Price"]),
-                            Quantity = Convert.ToDouble(reader["Quantity"]),
-                            Total = Convert.ToDouble(reader["Total"]),
-                            GrandTotal = Convert.ToDouble(reader["GrandTotal"]),
-                            StoreCode = reader["StoreCode"].ToString(),
-                            StoreName = reader["StoreName"].ToString(),
-                            Code = reader["Code"].ToString(),
-                            Card = reader["Card"].ToString(),
-                            SubTotal = Convert.ToDouble(reader["SubTotal"]),
-                            Discount1 = Convert.ToDouble(reader["Discount1"]),
-                            Discount2 = Convert.ToDouble(reader["Discount2"]),
-                            DiscountNominal = Convert.ToDouble(reader["DiscountNominal"]),
-                            BankName = reader["BankName"].ToString(),
-                            Discount = Convert.ToDouble(reader["Discount"]),
-                            Margin = Convert.ToDouble(reader["Margin"]),
-                            PaymentType = reader["PaymentType"].ToString(),
-                            Remark = reader["Remark"].ToString(),
-                            SpecialDiscount = Convert.ToInt32(reader["sp"].ToString()),
-                            _CreatedUtc = reader["_CreatedUtc"].ToString(),
-                            IsReturn = Convert.ToBoolean(reader["isReturn"]) == true ? "Diretur" : ""
+                            ItemCode = reader["Code"].ToString(),
+                            ItemName = reader["Name"].ToString(),
+                            ItemArticleRealizationOrder = reader["ArticleRealizationOrder"].ToString(),
+                            Size = reader["Size"].ToString(),
+                            SeasonCode = reader["SeasonDocName"].ToString(),
+                            Category = reader["CategoryDocName"].ToString(),
+                            OriginalCost = Convert.ToDouble(reader["DomesticCOGS"]),
+                            Gross = Convert.ToDouble(reader["DomesticSale"]),
+                            Collection = reader["CollectionDocName"].ToString(),
+                            Color = reader["ColorDocName"].ToString(),
+                            Style = reader["StyleDocName"].ToString(),
+                            Group = reader["CounterDocName"].ToString(),
                         };
-                        dataList.Add(data);
+                        dataItem.Add(item);
                     }
                 }
-                return dataList.AsQueryable();
-
+                connCore.Close();
             }
+
+            reportData = (from a in dataList
+                          join b in dataItem on a.ItemCode equals b.ItemCode
+                          select new SalesReportViewModel
+                          {
+                              ItemCode = a.ItemCode,
+                              Brand = a.Brand,
+                              Date = a.Date,
+                              Category = b.Category,
+                              Collection = b.Collection,
+                              SeasonCode = b.SeasonCode,
+                              SeasonYear = string.IsNullOrEmpty(b.SeasonCode) ? "ALL" : b.SeasonCode.Substring(2, 2),
+                              ItemArticleRealizationOrder = b.ItemArticleRealizationOrder,
+                              ItemName = b.ItemName,
+                              Color = b.Color,
+                              Style = b.Style,
+                              Group = b.Group,
+                              Size = b.Size,
+                              Quantity = a.Quantity,
+                              Location = a.Location,
+                              OriginalCost = b.OriginalCost,
+                              Gross = b.Gross,
+                              Nett = (((((b.Gross * (100 - a.Discount1)) / 100 * (100 - a.Discount2)) / 100 - a.DiscountNominal) * (100 - a.SpecialDiscount)) / 100 * (100 - a.Margin) / 100),
+                              Discount1 = a.Discount1,
+                              Discount2 = a.Discount2,
+                              DiscountNominal = a.DiscountNominal,
+                              SpecialDiscount = a.SpecialDiscount,
+                              TotalOriCost = a.Quantity * b.OriginalCost,
+                              TotalGross = a.TotalGross * a.Quantity,
+                              TotalNett = a.Nett * a.Quantity,
+                              Margin = a.Margin
+                          }).ToList();
+
+            return reportData.AsQueryable().OrderBy(a => a.Date).ThenBy(a => a.ItemCode);
 
         }
-        public MemoryStream GenerateExcelReportSalesAll(string storageId, DateTime dateFrom, DateTime dateTo)
+        public MemoryStream GenerateExcelReportSalesAll(string storageId, DateTime dateFrom, DateTime dateTo, string group, string category, string style, string collection, string season, string color, string sizes)
         {
-            var Query = GetSalesAllQuery(storageId, dateFrom, dateTo);
+            var Query = GetSalesAllQuery(storageId, dateFrom, dateTo, group, category, style, collection, season, color, sizes);
 
             DataTable result = new DataTable();
-            result.Columns.Add(new DataColumn() { ColumnName = "Code", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Date", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Sub Total", DataType = typeof(double) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Discount", DataType = typeof(double) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Grand Total", DataType = typeof(double) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Store Code", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Store Name", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Item Code", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Item Name", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "RO", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Quantity", DataType = typeof(double) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Price", DataType = typeof(double) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Discount1", DataType = typeof(double) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Discount2", DataType = typeof(double) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Discount Nominal", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Barcode", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Brand", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Transaction Date", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Category", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Collection", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Season Code", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Season Year", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "RO/Article", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nama", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Color", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Size", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Style", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Group", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Qty", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Location", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Original Cost", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Landed Cost", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Gross", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nett", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Disc %", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Disc2 %", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Disc Nominal", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Disc Special", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Disc Name", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total Original Cost", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total Landed Cost", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total Gross", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total Nett", DataType = typeof(double) });
             result.Columns.Add(new DataColumn() { ColumnName = "Margin", DataType = typeof(double) });
             result.Columns.Add(new DataColumn() { ColumnName = "Spesial Discount", DataType = typeof(double) });
             result.Columns.Add(new DataColumn() { ColumnName = "Total", DataType = typeof(double) });
@@ -1342,16 +1399,15 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
 
 
             if (Query.ToArray().Count() == 0)
-                result.Rows.Add("", "", 0, 0, 0, "", "", "", "", "", 0, 0, 0, 0, 0, 0, 0, 0, "", "", "", "", "");
-
-            // to allow column name to be generated properly for empty data as template
+                result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "", "", 0, "", 0, "", 0, 0, 0, "", "", "", "", 0, "", 0, 0, 0);
             else
             {
                 foreach (var item in Query)
                 {
-                    result.Rows.Add(item.Code, item.Date, item.SubTotal,
-                          item.Discount, item.GrandTotal, item.StoreCode, item.StoreName, item.ItemCode, item.ItemName, item.ItemArticleRealizationOrder, item.Quantity, item.Price,
-                          item.Discount1, item.Discount2, item.DiscountNominal, item.Margin, item.SpecialDiscount, item.Total, item.IsReturn, item.Remark, item.PaymentType, item.BankName, item.Card);
+                    result.Rows.Add(item.ItemCode, item.Brand, item.Date, item.Category, item.Collection, item.SeasonCode, item.SeasonYear,
+                          item.ItemArticleRealizationOrder, item.ItemName, item.Color, item.Size, item.Style, item.Group, item.Quantity, item.Location,
+                          item.OriginalCost, "", item.Gross, item.Nett, item.Discount1, item.Discount2, item.DiscountNominal,
+                          item.SpecialDiscount, "", item.TotalOriCost, "", item.TotalGross, item.TotalNett, item.Margin);
                 }
 
             }

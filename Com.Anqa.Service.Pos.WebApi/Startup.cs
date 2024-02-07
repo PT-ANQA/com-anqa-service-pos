@@ -20,6 +20,7 @@ using MongoDB.Driver;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Text;
+using Com.Anqa.Service.Pos.Lib;
 
 namespace Com.Danliris.Service.Inventory.WebApi
 {
@@ -88,7 +89,10 @@ namespace Com.Danliris.Service.Inventory.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             string connectionString = Configuration.GetConnectionString("DefaultConnection") ?? Configuration["DefaultConnection"];
+            string coreConnectionString = Configuration.GetConnectionString("CoreDbConnection") ?? Configuration["CoreDbConnection"];
 
+            APIEndpoint.CoreConnectionString = Configuration.GetConnectionString("CoreDbConnection") ?? Configuration["CoreDbConnection"];
+            APIEndpoint.DefaultConnectionString = Configuration.GetConnectionString("DefaultConnection") ?? Configuration["DefaultConnection"];
             services
                 .AddDbContext<PosDbContext>(options => options.UseSqlServer(connectionString))
                 .AddApiVersioning(options =>
@@ -97,6 +101,8 @@ namespace Com.Danliris.Service.Inventory.WebApi
                     options.AssumeDefaultVersionWhenUnspecified = true;
                     options.DefaultApiVersion = new ApiVersion(1, 0);
                 });
+            services.AddTransient<IOtherDbConnectionDBContext>(s => new OtherDbConnectionDBContext(coreConnectionString));
+            services.AddTransient<IOtherDbConnectionDBContext>(s => new OtherDbConnectionDBContext(coreConnectionString));
 
             //services.Configure<MongoDbSettings>(options =>
             //    {
