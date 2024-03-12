@@ -33,5 +33,6 @@ namespace Com.Anqa.Service.Pos.Lib.ViewModels.SalesDoc
         public string _CreatedUtc { get; set; }
         public string Style { get; set; }
         public string Group { get; set; }
+        public string TransactionNo { get; set; }
     }
 }
