@@ -1261,7 +1261,7 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
 
                 string query = "SELECT " +
                     "a.StoreStorageName as Location, Discount1,Discount2,DiscountNominal,SpesialDiscount,b.ItemCode Barcode, " +
-                    "b.Price Net, b.Margin, b.Total TotalNet, b.Quantity, " +
+                    "b.Price Net, b.Margin, b.Total TotalNet, b.Quantity, a.Code , " +
                     "CONVERT(varchar, a._CreatedUtc, 111) TransactionDateFormatted " +
                     "FROM SalesDocs a " +
                     "JOIN SalesDocDetails b on a.Id = b.SalesDocId " +
@@ -1290,7 +1290,8 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
                             DiscountNominal = Convert.ToDouble(reader["DiscountNominal"]),
                             Quantity = Convert.ToDouble(reader["Quantity"]),
                             Margin = Convert.ToDouble(reader["Margin"]),
-                            TotalNett = Convert.ToDouble(reader["TotalNet"])
+                            TotalNett = Convert.ToDouble(reader["TotalNet"]),
+                            TransactionNo = reader["Code"].ToString()
                         };
                         dataList.Add(data);
                         itemcodes.Add(("'" + data.ItemCode + "'"));
@@ -1395,7 +1396,8 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
                               TotalOriCost = a.Quantity * b.OriginalCost,
                               TotalGross = a.TotalGross * a.Quantity,
                               TotalNett = a.Nett * a.Quantity,
-                              Margin = a.Margin
+                              Margin = a.Margin,
+                              TransactionNo = a.TransactionNo
                           }).ToList();
 
             return reportData.AsQueryable().OrderBy(a => a.Date).ThenBy(a => a.ItemCode);
@@ -1414,6 +1416,7 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
             result.Columns.Add(new DataColumn() { ColumnName = "Season Code", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Season Year", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "RO/Article", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nomor Transaksi", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Nama", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Color", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Size", DataType = typeof(String) });
@@ -1438,13 +1441,13 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
 
 
             if (Query.ToArray().Count() == 0)
-                result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "", "", 0, "", 0, "", 0, 0, 0, "", "", "", "", 0, "", 0, 0, 0);
+                result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "", "", "", 0, "", 0, "", 0, 0, 0, "", "", "", "", 0, "", 0, 0, 0);
             else
             {
                 foreach (var item in Query)
                 {
                     result.Rows.Add(item.ItemCode, item.Brand, item.Date, item.Category, item.Collection, item.SeasonCode, item.SeasonYear,
-                          item.ItemArticleRealizationOrder, item.ItemName, item.Color, item.Size, item.Style, item.Group, item.Quantity, item.Location,
+                          item.ItemArticleRealizationOrder, item.TransactionNo, item.ItemName, item.Color, item.Size, item.Style, item.Group, item.Quantity, item.Location,
                           item.OriginalCost, "", item.Gross, item.Nett, item.Discount1, item.Discount2, item.DiscountNominal,
                           item.SpecialDiscount, "", item.TotalOriCost, "", item.TotalGross, item.TotalNett, item.Margin);
                 }
