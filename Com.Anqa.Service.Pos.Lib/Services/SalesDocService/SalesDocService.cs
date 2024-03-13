@@ -1262,7 +1262,7 @@ namespace Com.Anqa.Service.Pos.Lib.Services.SalesDocService
                 string query = "SELECT " +
                     "a.StoreStorageName as Location, Discount1,Discount2,DiscountNominal,SpesialDiscount,b.ItemCode Barcode, " +
                     "b.Price Net, b.Margin, b.Total TotalNet, b.Quantity, a.Code , " +
-                    "CONVERT(varchar, a._CreatedUtc, 111) TransactionDateFormatted " +
+                    "CONVERT(varchar, a.[Date], 111) TransactionDateFormatted " +
                     "FROM SalesDocs a " +
                     "JOIN SalesDocDetails b on a.Id = b.SalesDocId " +
                     "WHERE isVoid = 0 AND a.isReturn = 0 AND b.isReturn = 0 " +
