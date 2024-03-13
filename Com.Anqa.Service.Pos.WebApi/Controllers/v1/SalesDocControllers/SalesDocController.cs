@@ -349,7 +349,7 @@ namespace Com.Anqa.Service.Pos.WebApi.Controllers.v1.SalesDocControllers
                 if (storageId == null) { storageId = "0"; }
 
                 var xls = Service.GenerateExcelReportSalesAll(storageId, dateFrom, dateTo, group, category, style, collection, season, color, sizes);
-                filename = String.Format("Report Inventori - {0}.xlsx", dateFrom.ToString("MM-yyyy") + "-" + dateTo.ToString("MM-yyyy"));
+                filename = String.Format("Report Sales - {0}.xlsx", dateFrom.ToString("MM-yyyy") + "-" + dateTo.ToString("MM-yyyy"));
 
                 xlsInBytes = xls.ToArray();
                 var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
